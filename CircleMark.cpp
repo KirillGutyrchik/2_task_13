@@ -6,32 +6,35 @@
 #include "CircleMark.h"
 
 CircleMark::CircleMark(short radius, QWidget *parent)
-: radius(radius),
-  QWidget(parent)
+: QWidget(parent),
+  radius(radius)
 {
     resize(2*radius + 5, 2*radius + 5);
 }
 
-void CircleMark::paintEvent(QPaintEvent *)
+[[maybe_unused]] void CircleMark::paintEvent(QPaintEvent *)
 {
     QPainter painter(this);
 
-    painter.setPen(QPen(QColor(0xd4d4d4), radius / 10));
+    painter.setPen(QPen(QColor(/*light gray*/0xd4d4d4), radius / 10));
     painter.drawEllipse(QPoint(this->width()/2, this->height()/2), radius, radius);
 
-    painter.setPen(QPen(QColor(0x03f8fc) , radius / 10));
-    painter.drawArc(this->width()/2 - radius, this->height()/2 - radius, 2 * radius, 2 * radius, 90 * 16 , -16 * 3.6 * percent);
+    painter.setPen(QPen(QColor(/*light blue*/0x03f8fc) , radius / 10));
+    painter.drawArc(this->width()/2 - radius, this->height()/2 - radius,
+                    2 * radius, 2 * radius,
+                    /*begin_angle*/ 90 * arc_coeff , -3.6 * percent * arc_coeff);
 
-
-    painter.setPen(QPen(QColor(0x0e7073), 1));
-    painter.setBrush(QColor(0x1ac4c9));
-    painter.drawEllipse(QPoint(  this->width()/2 + radius * sin(3.6 * percent / 180.0 * M_PI),
-                                      this->height()/2 - radius * cos(3.6 * percent / 180.0 * M_PI)),radius / 8, radius / 8);
-
+    painter.setPen(QPen(QColor(/*dark blue*/0x0e7073), 1));
+    painter.setBrush(QColor(/*light blue*/0x1ac4c9));
+    painter.drawEllipse(QPoint(this->width()/2 + radius * sin(3.6 * percent / 180.0 * M_PI),
+                                     this->height()/2 - radius * cos(3.6 * percent / 180.0 * M_PI)),
+                        radius / 8, radius / 8);
 
     painter.setPen(QPen(Qt::black, 2));
     painter.setFont(QFont("Arial", radius/1.5));
-    painter.drawText(rect(), Qt::AlignCenter,QtPrivate::convertToQString(std::to_string(percent)));
+    painter.drawText(rect(),
+                     Qt::AlignCenter,
+                     QtPrivate::convertToQString(std::to_string(percent)));
 }
 
 void CircleMark::mousePressEvent(QMouseEvent * event)

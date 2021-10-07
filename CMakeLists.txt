@@ -23,9 +23,6 @@ target_link_libraries(2_task_13
 
 if (WIN32)
     set(DEBUG_SUFFIX)
-#    if (CMAKE_BUILD_TYPE MATCHES "Debug")
-#        set(DEBUG_SUFFIX "d")
-#    endif ()
     set(QT_INSTALL_PATH "${CMAKE_PREFIX_PATH}")
     if (NOT EXISTS "${QT_INSTALL_PATH}/bin")
         set(QT_INSTALL_PATH "${QT_INSTALL_PATH}/..")

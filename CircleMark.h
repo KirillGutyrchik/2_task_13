@@ -2,6 +2,8 @@
 #include <QWidget>
 #include <QMouseEvent>
 
+const double arc_coeff = 16;
+
 class CircleMark final : public QWidget
 {
 private:
