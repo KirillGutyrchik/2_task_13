@@ -1,117 +1,146 @@
 #include <QApplication>
 #include <QPainter>
-#include <QEvent>
 #include <cmath>
+#include <QStyle>
 
 #include "CircleMark.h"
 
-CircleMark::CircleMark(short radius, QWidget *parent)
+template <typename type>
+CircleMark<type>::CircleMark(short radius, QWidget *parent)
 : QWidget(parent),
   radius(radius)
 {
     resize(2*radius + 5, 2*radius + 5);
+    btn_plus = new QPushButton("+", this);
+    btn_minus = new QPushButton("-", this);
+
+    connect(btn_minus, &QPushButton::pressed,this, &CircleMark::dec);
+    connect(btn_plus, &QPushButton::pressed,this, &CircleMark::inc);
 }
 
-[[maybe_unused]] void CircleMark::paintEvent(QPaintEvent *)
+template <typename type>
+void CircleMark<type>::paintEvent([[maybe_unused]] QPaintEvent *)
 {
     QPainter painter(this);
 
-    painter.setPen(QPen(QColor(/*light gray*/0xd4d4d4), radius / 10));
-    painter.drawEllipse(QPoint(this->width()/2, this->height()/2), radius, radius);
-
-    painter.setPen(QPen(QColor(/*light blue*/0x03f8fc) , radius / 10));
+    // Draw indicator background
+    painter.setPen(QPen(QColor(indctr_bg_clr), radius / 10));
     painter.drawArc(this->width()/2 - radius, this->height()/2 - radius,
                     2 * radius, 2 * radius,
-                    /*begin_angle*/ 90 * arc_coeff , -3.6 * percent * arc_coeff);
+                    begin_angle * arc_coeff , -end_angle * arc_coeff);
 
-    painter.setPen(QPen(QColor(/*dark blue*/0x0e7073), 1));
-    painter.setBrush(QColor(/*light blue*/0x1ac4c9));
-    painter.drawEllipse(QPoint(this->width()/2 + radius * sin(3.6 * percent / 180.0 * M_PI),
-                                     this->height()/2 - radius * cos(3.6 * percent / 180.0 * M_PI)),
+    // Draw fill indicator
+    painter.setPen(QPen(QColor(indctr_fill_clr) , radius / 10));
+    painter.drawArc(this->width()/2 - radius, this->height()/2 - radius,
+                    2 * radius, 2 * radius,
+                    begin_angle * arc_coeff , -fillAngle() * arc_coeff);
+
+    // Draw indicator mark
+    double fill_angle = angleToRad(fillAngle() - (begin_angle - 90));
+    painter.setPen(QPen(QColor(mark_clr), 1));
+    painter.setBrush(QColor(mark_fill_clr));
+    painter.drawEllipse(QPoint(this->width()/2 + radius * sin(fill_angle),
+                                     this->height()/2 - radius * cos(fill_angle)),
                         radius / 8, radius / 8);
 
+    // Draw filling text
     painter.setPen(QPen(Qt::black, 2));
-    painter.setFont(QFont("Arial", radius/1.5));
+    painter.setFont(QFont("Arial", radius / 2));
+    QString fillingText = QtPrivate::convertToQString(std::to_string(filling / divider));
+    if(std::is_same<type, double>::value && filling / divider == 0 && static_cast<double>(filling) / divider < 0)
+        fillingText.push_front('-');
+    if(std::is_same<type, double>::value)
+        fillingText.push_back(QtPrivate::convertToQString("." + std::to_string(std::abs(filling % divider))));
     painter.drawText(rect(),
                      Qt::AlignCenter,
-                     QtPrivate::convertToQString(std::to_string(percent)));
+                     fillingText );
+
+    // Buttons
+    btn_plus->setGeometry(this->width() / 2 + radius / 2,
+                          this->height() / 2 + radius / 1.4,
+                          radius / 2.5, radius / 2.5);
+    btn_minus->setGeometry(this->width() / 2 - 0.9 * radius,
+                           this->height() / 2 + radius / 1.4,
+                           radius / 2.5, radius / 2.5);
 }
 
-void CircleMark::mousePressEvent(QMouseEvent * event)
-{
-    switch (event->button())
-    {
-        case Qt::LeftButton:
-            if(percent != 100)
-                ++percent;
-            repaint();
-            break;
-        case Qt::RightButton:
-            if(percent != 0)
-                --percent;
-            repaint();
-            break;
-    }
-    QWidget::mousePressEvent(event);
-}
-
-void CircleMark::wheelEvent(QWheelEvent *event)
+template <typename type>
+void CircleMark<type>::wheelEvent(QWheelEvent *event)
 {
 
-    {
-        if(event->angleDelta().y() > 0)
-        {
-            if(percent != 100)
-                ++percent;
-
-            repaint();
-        }
-        else if(event->angleDelta().y() < 0)
-        {
-            if(percent != 0)
-                --percent;
-
-            repaint();
-        }
-    }
+    if(event->angleDelta().y() > 0)
+        this->inc();
+    else if(event->angleDelta().y() < 0)
+        this->dec();
 
     QWidget::wheelEvent(event);
 }
 
-void CircleMark::keyPressEvent(QKeyEvent *event)
+template <typename type>
+void CircleMark<type>::keyPressEvent(QKeyEvent *event)
 {
     switch (event->key())
     {
         case Qt::Key_Plus: case Qt::Key_Up:
-            if(percent != 100)
-                ++percent;
-            repaint();
+            this->inc();
             break;
 
         case Qt::Key_Minus: case Qt::Key_Down:
-            if(percent != 0)
-                --percent;
-            repaint();
+            this->dec();
             break;
     }
     QWidget::keyPressEvent(event);
 }
 
-void CircleMark::setRadius(short radius)
+template <typename type>
+void CircleMark<type>::setRadius(short radius)
 { this->radius = radius; }
 
-void CircleMark::enterEvent(QEnterEvent *event)
+template <typename type>
+void CircleMark<type>::enterEvent(QEnterEvent *event)
 {
     setFocus();
-    radius += 5;
+    radius += 3;
     QWidget::enterEvent(event);
 }
 
-void CircleMark::leaveEvent(QEvent *event)
+template <typename type>
+void CircleMark<type>::leaveEvent(QEvent *event)
 {
-    radius -= 5;
+    radius -= 3;
     clearFocus();
     QWidget::leaveEvent(event);
 }
 
+template <typename type>
+double CircleMark<type>::angleToRad(double rad)
+{ return rad / 180 * M_PI; }
+
+template <typename type>
+double CircleMark<type>::fillAngle() const
+{ return end_angle / static_cast<double>(max - min) * (filling - min); }
+
+template <typename type>
+void CircleMark<type>::inc()
+{ if(filling < max) ++filling; repaint(); }
+
+template <typename type>
+void CircleMark<type>::dec()
+{ if(filling > min) --filling; repaint(); }
+
+template<class type>
+type CircleMark<type>::operator()()
+{ return static_cast<type>(filling) / divider; }
+
+template<class type>
+void CircleMark<type>::setLimits(long min, long max, long divider)
+{
+    this->min = min;
+    this->max = max;
+    this->divider = divider;
+}
+
+
+template class CircleMark<long>;
+template class CircleMark<double>;
 

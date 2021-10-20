@@ -5,12 +5,11 @@
 
 #include "CircleMark.h"
 
-
 class MainWindow : public QMainWindow
 {
 private:
-    CircleMark* cm1;
-    CircleMark* cm2;
+    CircleMark<double>* cm1;
+    CircleMark<long>* cm2;
 
 private:
     bool eventFilter(QObject* object, QEvent* event) override
@@ -19,15 +18,16 @@ private:
         {
             return object->event(event);
         }
-
         return false;
     }
 
 public:
     MainWindow()
     {
-        cm1 = new CircleMark(/*radius*/50, this);
-        cm2 = new CircleMark(/*radius*/50, this);
+        cm1 = new CircleMark<double>(/*radius*/50, this);
+        cm2 = new CircleMark<long>(/*radius*/50, this);
+
+        cm1->setLimits(/*min*/-100, /*max*/100, /*divider*/10);
 
         auto* mainPage = new QWidget(this);
         auto* VBox = new QVBoxLayout(mainPage);
@@ -50,7 +50,7 @@ int main(int argc, char *argv[])
     QApplication qApplication(argc, argv);
 
     MainWindow mainWindow;
-    mainWindow.resize(300, 300);
+    mainWindow.resize(500, 500);
 
     mainWindow.show();
     return QApplication::exec();
