@@ -14,8 +14,8 @@ CircleMark<type>::CircleMark(short radius, QWidget *parent)
     btn_plus = new QPushButton("+", this);
     btn_minus = new QPushButton("-", this);
 
-    connect(btn_minus, &QPushButton::pressed,this, &CircleMark::dec);
-    connect(btn_plus, &QPushButton::pressed,this, &CircleMark::inc);
+    connect(btn_minus, &QPushButton::pressed, this, &CircleMark::dec);
+    connect(btn_plus, &QPushButton::pressed, this, &CircleMark::inc);
 }
 
 template <typename type>
@@ -27,33 +27,43 @@ void CircleMark<type>::paintEvent([[maybe_unused]] QPaintEvent *)
     painter.setPen(QPen(QColor(indctr_bg_clr), radius / 10));
     painter.drawArc(this->width()/2 - radius, this->height()/2 - radius,
                     2 * radius, 2 * radius,
-                    begin_angle * arc_coeff , -end_angle * arc_coeff);
+                    begin_angle * arc_coeff, -end_angle * arc_coeff);
+
 
     // Draw fill indicator
-    painter.setPen(QPen(QColor(indctr_fill_clr) , radius / 10));
+    painter.setPen(QPen(QColor(indctr_fill_clr), radius / 10));
     painter.drawArc(this->width()/2 - radius, this->height()/2 - radius,
                     2 * radius, 2 * radius,
-                    begin_angle * arc_coeff , -fillAngle() * arc_coeff);
+                    begin_angle * arc_coeff, -fillAngle() * arc_coeff);
+
 
     // Draw indicator mark
-    double fill_angle = angleToRad(fillAngle() - (begin_angle - 90));
+    const double fill_angle = angleToRad(fillAngle() - (begin_angle - 90));
     painter.setPen(QPen(QColor(mark_clr), 1));
     painter.setBrush(QColor(mark_fill_clr));
     painter.drawEllipse(QPoint(this->width()/2 + radius * sin(fill_angle),
-                                     this->height()/2 - radius * cos(fill_angle)),
+                               this->height()/2 - radius * cos(fill_angle)),
                         radius / 8, radius / 8);
+
 
     // Draw filling text
     painter.setPen(QPen(Qt::black, 2));
     painter.setFont(QFont("Arial", radius / 2));
     QString fillingText = QtPrivate::convertToQString(std::to_string(filling / divider));
-    if(std::is_same<type, double>::value && filling / divider == 0 && static_cast<double>(filling) / divider < 0)
+    if(std::is_same<type, double>::value
+      && filling / divider == 0
+      && static_cast<double>(filling) / divider < 0)
         fillingText.push_front('-');
+
     if(std::is_same<type, double>::value)
-        fillingText.push_back(QtPrivate::convertToQString("." + std::to_string(std::abs(filling % divider))));
+        fillingText.push_back(
+        QtPrivate::convertToQString(
+        "." + std::to_string(std::abs(filling % divider))));
+
     painter.drawText(rect(),
                      Qt::AlignCenter,
                      fillingText );
+
 
     // Buttons
     btn_plus->setGeometry(this->width() / 2 + radius / 2,
@@ -81,11 +91,13 @@ void CircleMark<type>::keyPressEvent(QKeyEvent *event)
 {
     switch (event->key())
     {
-        case Qt::Key_Plus: case Qt::Key_Up:
+        case Qt::Key_Plus: [[fallthrough]];
+        case Qt::Key_Up:
             this->inc();
             break;
 
-        case Qt::Key_Minus: case Qt::Key_Down:
+        case Qt::Key_Minus: [[fallthrough]];
+        case Qt::Key_Down:
             this->dec();
             break;
     }
@@ -122,11 +134,11 @@ double CircleMark<type>::fillAngle() const
 
 template <typename type>
 void CircleMark<type>::inc()
-{ if(filling < max) ++filling; repaint(); }
+{ if(filling < max) { ++filling; repaint(); } }
 
 template <typename type>
 void CircleMark<type>::dec()
-{ if(filling > min) --filling; repaint(); }
+{ if(filling > min) { --filling; repaint(); } }
 
 template<class type>
 type CircleMark<type>::operator()()

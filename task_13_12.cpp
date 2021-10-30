@@ -5,22 +5,8 @@
 
 #include "CircleMark.h"
 
-class MainWindow : public QMainWindow
+class MainWindow final : public QMainWindow
 {
-private:
-    CircleMark<double>* cm1;
-    CircleMark<long>* cm2;
-
-private:
-    bool eventFilter(QObject* object, QEvent* event) override
-    {
-        if(event->type() == QEvent::KeyPress)
-        {
-            return object->event(event);
-        }
-        return false;
-    }
-
 public:
     MainWindow()
     {
@@ -41,6 +27,19 @@ public:
         qApp->installEventFilter(this);
     }
 
+private:
+    bool eventFilter(QObject* object, QEvent* event) override
+    {
+        if(event->type() == QEvent::KeyPress)
+        {
+            return object->event(event);
+        }
+        return false;
+    }
+
+private:
+    CircleMark<double>* cm1;
+    CircleMark<long>* cm2;
 };
 
 
