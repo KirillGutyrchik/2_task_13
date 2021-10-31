@@ -146,6 +146,7 @@ void CircleMark<type>::setLimits(long min, long max, long divider)
     this->min = min;
     this->max = max;
     this->divider = divider;
+    this->filling = min;
 }
 
 
