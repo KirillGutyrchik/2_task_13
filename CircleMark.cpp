@@ -29,13 +29,11 @@ void CircleMark<type>::paintEvent([[maybe_unused]] QPaintEvent *)
                     2 * radius, 2 * radius,
                     begin_angle * arc_coeff, -end_angle * arc_coeff);
 
-
     // Draw fill indicator
     painter.setPen(QPen(QColor(indctr_fill_clr), radius / 10));
     painter.drawArc(this->width()/2 - radius, this->height()/2 - radius,
                     2 * radius, 2 * radius,
                     begin_angle * arc_coeff, -fillAngle() * arc_coeff);
-
 
     // Draw indicator mark
     const double fill_angle = angleToRad(fillAngle() - (begin_angle - 90));
@@ -45,25 +43,23 @@ void CircleMark<type>::paintEvent([[maybe_unused]] QPaintEvent *)
                                this->height()/2 - radius * cos(fill_angle)),
                         radius / 8, radius / 8);
 
-
     // Draw filling text
     painter.setPen(QPen(Qt::black, 2));
     painter.setFont(QFont("Arial", radius / 2));
     QString fillingText = QtPrivate::convertToQString(std::to_string(filling / divider));
-    if(std::is_same<type, double>::value
-      && filling / divider == 0
-      && static_cast<double>(filling) / divider < 0)
-        fillingText.push_front('-');
+    if constexpr(std::is_same<type, double>::value)
+    {
+        if( filling / divider == 0
+            && static_cast<double>(filling) / divider < 0)
+            { fillingText.push_front('-'); }
 
-    if(std::is_same<type, double>::value)
         fillingText.push_back(
         QtPrivate::convertToQString(
         "." + std::to_string(std::abs(filling % divider))));
-
+    }
     painter.drawText(rect(),
                      Qt::AlignCenter,
                      fillingText );
-
 
     // Buttons
     btn_plus->setGeometry(this->width() / 2 + radius / 2,
