@@ -26,9 +26,9 @@ static const QRgb mark_fill_clr = 0x1ac4c9;
  *  <li>buttons in widget.
  *</ul>
  */
-template <class type>
 class CircleMark final : public QWidget
 {
+    Q_OBJECT
 public:
     ///
     /// \param radius - short value in pixels.
@@ -39,24 +39,36 @@ public:
     /// \param radius - short value in pixels.
     void setRadius(short radius);
 
+    ///
     /// <b> sets indicator limits in the form: \n
     /// <pre> <b> min / divider ... max / divider \n
     /// \param min
     /// \param max
     /// \param divider
-    void setLimits(long min, long max, long divider);
+    void setLimits(long min, long max, ulong divider);
+
+    ///
+    /// \param precision - number of digits after decimal point(default: 2)
+    void setPrecision(ushort precision);
+
+    ///
+    /// \param filling - number within min ... max
+    void setFilling(long filling);
 
     ///
     /// \return double or long value in indicator.
-    type operator() ();
+    double operator() ();
 
 private:
     static inline double angleToRad(double rad);
     inline double fillAngle() const;
 
+signals:
+    void valueChanged();
+
 private slots:
-    inline void inc();
-    inline void dec();
+    void inc();
+    void dec();
 
 private:
     void paintEvent(QPaintEvent* ) override;
@@ -68,10 +80,12 @@ private:
 private:
     short   radius{50};
 
-    long  min{0};
-    long  max{100};
-    long  divider{1};
-    long  filling{min};
+    long   min{0};
+    long   max{100};
+    ulong  divider{1};
+    long   filling{min};
+    ushort precision{2};
+
     QPushButton* btn_plus{nullptr};
     QPushButton* btn_minus{nullptr};
 };

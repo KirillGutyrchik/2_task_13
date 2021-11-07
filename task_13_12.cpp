@@ -10,10 +10,10 @@ class MainWindow final : public QMainWindow
 public:
     MainWindow()
     {
-        cm1 = new CircleMark<double>(/*radius*/50, this);
-        cm2 = new CircleMark<long>(/*radius*/50, this);
+        cm1 = new CircleMark(/*radius*/50, this);
+        cm2 = new CircleMark(/*radius*/50, this);
 
-        cm1->setLimits(/*min*/-100, /*max*/100, /*divider*/10);
+        cm1->setLimits(/*min*/-100, /*max*/100, /*divider*/15);
 
         auto* mainPage = new QWidget(this);
         auto* VBox = new QVBoxLayout(mainPage);
@@ -38,8 +38,8 @@ private:
     }
 
 private:
-    CircleMark<double>* cm1;
-    CircleMark<long>* cm2;
+    CircleMark* cm1;
+    CircleMark* cm2;
 };
 
 

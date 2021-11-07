@@ -5,8 +5,7 @@
 
 #include "CircleMark.h"
 
-template <typename type>
-CircleMark<type>::CircleMark(short radius, QWidget *parent)
+CircleMark::CircleMark(short radius, QWidget *parent)
 : QWidget(parent),
   radius(radius)
 {
@@ -18,8 +17,7 @@ CircleMark<type>::CircleMark(short radius, QWidget *parent)
     connect(btn_plus, &QPushButton::pressed, this, &CircleMark::inc);
 }
 
-template <typename type>
-void CircleMark<type>::paintEvent([[maybe_unused]] QPaintEvent *)
+void CircleMark::paintEvent([[maybe_unused]] QPaintEvent *)
 {
     QPainter painter(this);
 
@@ -46,20 +44,14 @@ void CircleMark<type>::paintEvent([[maybe_unused]] QPaintEvent *)
     // Draw filling text
     painter.setPen(QPen(Qt::black, 2));
     painter.setFont(QFont("Arial", radius / 2));
-    QString fillingText = QtPrivate::convertToQString(std::to_string(filling / divider));
-    if constexpr(std::is_same<type, double>::value)
-    {
-        if( filling / divider == 0
-            && static_cast<double>(filling) / divider < 0)
-            { fillingText.push_front('-'); }
-
-        fillingText.push_back(
-        QtPrivate::convertToQString(
-        "." + std::to_string(std::abs(filling % divider))));
-    }
+    std::string fillingText = std::to_string(static_cast<double>(filling) / divider);
+    if(divider == 1)
+        fillingText.erase(fillingText.find('.'));
+    else
+        fillingText.erase(fillingText.find('.') + 1 + precision);
     painter.drawText(rect(),
                      Qt::AlignCenter,
-                     fillingText );
+                     QtPrivate::convertToQString(fillingText) );
 
     // Buttons
     btn_plus->setGeometry(this->width() / 2 + radius / 2,
@@ -70,8 +62,7 @@ void CircleMark<type>::paintEvent([[maybe_unused]] QPaintEvent *)
                            radius / 2.5, radius / 2.5);
 }
 
-template <typename type>
-void CircleMark<type>::wheelEvent(QWheelEvent *event)
+void CircleMark::wheelEvent(QWheelEvent *event)
 {
 
     if(event->angleDelta().y() > 0)
@@ -82,8 +73,7 @@ void CircleMark<type>::wheelEvent(QWheelEvent *event)
     QWidget::wheelEvent(event);
 }
 
-template <typename type>
-void CircleMark<type>::keyPressEvent(QKeyEvent *event)
+void CircleMark::keyPressEvent(QKeyEvent *event)
 {
     switch (event->key())
     {
@@ -100,48 +90,39 @@ void CircleMark<type>::keyPressEvent(QKeyEvent *event)
     QWidget::keyPressEvent(event);
 }
 
-template <typename type>
-void CircleMark<type>::setRadius(short radius)
+[[maybe_unused]] void CircleMark::setRadius(short radius)
 { this->radius = radius; }
 
-template <typename type>
-void CircleMark<type>::enterEvent(QEnterEvent *event)
+void CircleMark::enterEvent(QEnterEvent *event)
 {
     setFocus();
     radius += 3;
     QWidget::enterEvent(event);
 }
 
-template <typename type>
-void CircleMark<type>::leaveEvent(QEvent *event)
+void CircleMark::leaveEvent(QEvent *event)
 {
     radius -= 3;
     clearFocus();
     QWidget::leaveEvent(event);
 }
 
-template <typename type>
-double CircleMark<type>::angleToRad(double rad)
+double CircleMark::angleToRad(double rad)
 { return rad / 180 * M_PI; }
 
-template <typename type>
-double CircleMark<type>::fillAngle() const
+double CircleMark::fillAngle() const
 { return end_angle / static_cast<double>(max - min) * (filling - min); }
 
-template <typename type>
-void CircleMark<type>::inc()
-{ if(filling < max) { ++filling; repaint(); } }
+void CircleMark::inc()
+{ if(filling < max) { ++filling; repaint(); emit valueChanged(); } }
 
-template <typename type>
-void CircleMark<type>::dec()
-{ if(filling > min) { --filling; repaint(); } }
+void CircleMark::dec()
+{ if(filling > min) { --filling; repaint(); emit valueChanged(); } }
 
-template<class type>
-type CircleMark<type>::operator()()
-{ return static_cast<type>(filling) / divider; }
+double CircleMark::operator()()
+{ return static_cast<double>(filling) / divider; }
 
-template<class type>
-void CircleMark<type>::setLimits(long min, long max, long divider)
+void CircleMark::setLimits(long min, long max, ulong divider)
 {
     this->min = min;
     this->max = max;
@@ -149,7 +130,15 @@ void CircleMark<type>::setLimits(long min, long max, long divider)
     this->filling = min;
 }
 
+void CircleMark::setPrecision(ushort precision)
+{
+    this->precision = precision;
+}
 
-template class CircleMark<long>;
-template class CircleMark<double>;
-
+void CircleMark::setFilling(long filling)
+{
+    if(filling >= min && filling <= max)
+        this->filling = filling;
+    else
+        qDebug() << "setFilling(long): going out of limits." << Qt::endl;
+}
